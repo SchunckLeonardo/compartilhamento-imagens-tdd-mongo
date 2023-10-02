@@ -61,7 +61,7 @@ app.post('/auth', async (req, res) => {
 
         let user = await UserModel.findOne({ email })
         if (user != undefined) {
-            let passTruth = bcrypt.compare(password, user.password)
+            let passTruth = await bcrypt.compare(password, user.password)
             if (passTruth) {
                 jwt.sign({ email, password }, secret, { expiresIn: '48h' }, (err, token) => {
                     if (err) {
@@ -72,7 +72,13 @@ app.post('/auth', async (req, res) => {
                         res.json({ token })
                     }
                 })
+            } else {
+                res.statusCode = 400
+                res.json({ errors: {password: "Senha incorreta"} })
             }
+        } else {
+            res.statusCode = 403
+            res.json({ errors: {email: "E-mail não cadastrado"} })
         }
 
     } catch (err) {

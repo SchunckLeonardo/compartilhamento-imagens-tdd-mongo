@@ -3,19 +3,19 @@ let app = require('../src/app')
 let supertest = require('supertest')
 let request = supertest(app)
 
-let mainUser = {name: "Leonardo", email: "leonardo@gmail.com", password: "123456"}
+let mainUser = { name: "Leonardo", email: "leonardo@gmail.com", password: "123456" }
 
 beforeAll(() => {
     return request.post('/user')
-    .send(mainUser)
-    .then(res => {})
-    .catch(err => console.log(err))
+        .send(mainUser)
+        .then(res => { })
+        .catch(err => console.log(err))
 })
 
 afterAll(() => {
     return request.delete(`/user/${mainUser.email}`)
-    .then(res => console.log(res))
-    .catch(err => console.log(err))
+        .then(res => console.log(res))
+        .catch(err => console.log(err))
 })
 
 describe("Cadastro de usuário", () => {
@@ -74,14 +74,14 @@ describe("Cadastro de usuário", () => {
                 expect(res.body.email).toBe(user.email)
 
                 return request
-                        .post("/user")
-                        .send(user)
-                        .then(res => {
-                            expect(res.statusCode).toEqual(400)
-                            expect(res.body.error).toBe("E-mail já cadastrado")
-                        }).catch(err => {
-                            throw new Error(err)
-                        })
+                    .post("/user")
+                    .send(user)
+                    .then(res => {
+                        expect(res.statusCode).toEqual(400)
+                        expect(res.body.error).toBe("E-mail já cadastrado")
+                    }).catch(err => {
+                        throw new Error(err)
+                    })
 
             })
             .catch(err => {
@@ -94,13 +94,36 @@ describe("Cadastro de usuário", () => {
 describe("Autenticação", () => {
     test("O usuário deve conseguir um token após logar", () => {
         return request.post('/auth')
-                .send({email: mainUser.email, password: mainUser.password})
-                .then(res => {
-                    expect(res.statusCode).toBe(200)
-                    expect(res.body.token).toBeDefined()
-                })
-                .catch(err => {
-                    throw new Error(err)
-                })
+            .send({ email: mainUser.email, password: mainUser.password })
+            .then(res => {
+                expect(res.statusCode).toBe(200)
+                expect(res.body.token).toBeDefined()
+            })
+            .catch(err => {
+                throw new Error(err)
+            })
+    })
+    test("O usuário deve estar cadastrado para logar", () => {
+        return request.post('/auth')
+            .send({ email: "diansdoinawif@gmail.com", password: mainUser.password })
+            .then(res => {
+                expect(res.statusCode).toBe(403)
+                expect(res.body.errors.email).toEqual('E-mail não cadastrado')
+            })
+            .catch(err => {
+                throw new Error(err)
+            })
+    })
+
+    test("Deve impedir que o usuário se logue com a senha errada", () => {
+        return request.post('/auth')
+            .send({ email: mainUser.email, password: "123155616" })
+            .then(res => {
+                expect(res.statusCode).toBe(400)
+                expect(res.body.errors.password).toEqual('Senha incorreta')
+            })
+            .catch(err => {
+                throw new Error(err)
+            })
     })
 })
